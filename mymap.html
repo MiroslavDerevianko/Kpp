@@ -1,0 +1,97 @@
+<html>
+	<head>
+		<meta charset='UTF-8'>
+		<meta name="viewport" content="initial-scale=1.0">
+		<title>MyMap</title>
+		<style>
+			#map {
+				background-color: green;
+				height: 100%;
+				width: 100%;
+			}
+			#textarea {
+				align-self: center;
+				z-index: 1;
+			}
+		</style>
+	</head>
+	<body>
+	<form>
+		<input type='text' id = 'txt' onchange="changed(this)" />
+		<input type='button' value = 'Отправить' onclick = "initMap()"/>
+	</form>
+		<div id='map'>
+			
+		</div>
+	</body>
+	<script>
+	  var namecity = "Винница";
+      var map;
+      var marker;
+      var latitude;
+      var longitude;
+
+      function changed(data){
+	  	namecity = data.value;
+	  	console.log(namecity);
+	  	return true;
+	  }
+
+      function initMap() {
+      	console.log(namecity);
+      	getCity();
+        getData();
+      }
+      		//get City from Google Map API
+      		function getCity(){
+
+      			function processData(data){
+      				console.log(data);
+      				latitude = data.results[0].geometry.location.lat;
+      				longitude = data.results[0].geometry.location.lng;
+
+      				 map = new google.maps.Map(document.getElementById('map'), {
+				          center: {lat: latitude, lng: longitude},
+				          zoom: 16
+				        });
+      			}
+      			//request
+      			fetch("https://maps.googleapis.com/maps/api/geocode/json?address="+namecity+"&region=uk&key=AIzaSyDp7IIs9nu5R1DgowDuM-vVwu2LmUpHQDQ")
+      			.then(function(response){
+      				response.json().then(function(data){
+      					processData(data);
+      				})
+      			}).catch(function(error){
+      				alert("Something wrong!!! "+error);
+      			});
+      		}
+      		//get Data from Privat24 API
+						function getData(){
+							function processData(data) {
+							var mass = data.devices;
+								for(var i=0;i<mass.length;i++){
+									var adress = mass[i].fullAddressUa.split(',');
+									 var marker = new google.maps.Marker({
+							          position: {lat: parseFloat(mass[i].latitude), lng: parseFloat(mass[i].longitude)},
+							          map: map,
+							          icon: 'favicon.ico'/*'https://st2.depositphotos.com/5266903/12011/v/950/depositphotos_120118846-stock-illustration-atm-machine-marker-flat-vector.jpg'*/,
+							          title: mass[i].placeUa+', '+adress[3]+', '+adress[4]
+							        });
+							        //console.log(mass[i].latitude+' '+mass[i].longitude+' '+mass[i].placeUa);
+								}
+							}
+						//request
+						fetch('https://api.privatbank.ua/p24api/infrastructure?json&atm&address=&city='+namecity)
+		  					.then(function(response) {
+						    response.json().then(function(data) {
+						      processData(data);
+						    });
+						  }).catch(function(error){
+						  		alert("Something wrong!!! "+error);
+						  });
+						}
+														 
+    </script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDp7IIs9nu5R1DgowDuM-vVwu2LmUpHQDQ&callback=initMap"
+    async defer></script>
+</html>
